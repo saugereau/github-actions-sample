@@ -1,0 +1,36 @@
+name: Generate CHANGELOG.md on release branch
+
+on:
+  push:
+    branches:
+      - 'releases/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
+      - name: Set up Ruby
+        uses: actions/setup-ruby@v1
+        with:
+          ruby-version: '2.6'
+      - name: install github_changelog_generator
+        run: gem install github_changelog_generator
+      - name: generate changelog
+        run: github_changelog_generator -u saugereau -p github-actions-sample
+        env:
+          CHANGELOG_GITHUB_TOKEN: ${{ secrets.GITHUB_ACTION_TOKEN }}
+      - name: Commit files
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git branch
+          git add CHANGELOG.md
+          git commit -m "release(prepare): generate changelog" -a
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_ACTION_TOKEN }}
+          branch: ${{ github.ref }}
